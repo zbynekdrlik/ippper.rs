@@ -42,6 +42,8 @@ pub struct SimpleIppDocument {
 #[derive(fmt_derive::Debug, Clone)]
 pub struct SimpleIppJobAttributes {
     pub originating_user_name: String,
+    pub document_name: Option<String>,
+    pub job_name: Option<String>,
     pub media: String,
     pub orientation: Option<PageOrientation>,
     pub sides: String,
@@ -55,6 +57,32 @@ impl SimpleIppJobAttributes {
         originating_user_name: String,
         attributes: &mut IppAttributes,
     ) -> Self {
+        // document-name and job-name are operation attributes, not job
+        // attributes. Both are type `name(MAX)` per RFC 8011, so accept
+        // NameWithoutLanguage and NameWithLanguage variants (same pattern as
+        // take_requesting_user_name in utils.rs).
+        let document_name = take_ipp_attribute(
+            attributes,
+            DelimiterTag::OperationAttributes,
+            "document-name",
+        )
+        .and_then(|attr| match attr {
+            IppValue::NameWithoutLanguage(name) => Some(name),
+            IppValue::NameWithLanguage { name, .. } => Some(name),
+            _ => None,
+        });
+
+        let job_name = take_ipp_attribute(
+            attributes,
+            DelimiterTag::OperationAttributes,
+            "job-name",
+        )
+        .and_then(|attr| match attr {
+            IppValue::NameWithoutLanguage(name) => Some(name),
+            IppValue::NameWithLanguage { name, .. } => Some(name),
+            _ => None,
+        });
+
         let media = take_ipp_attribute(attributes, DelimiterTag::JobAttributes, "media")
             .and_then(|attr| attr.into_keyword().ok())
             .unwrap_or_else(|| info.media_default.clone());
@@ -85,6 +113,8 @@ impl SimpleIppJobAttributes {
         .or(info.printer_resolution_default);
         Self {
             originating_user_name,
+            document_name,
+            job_name,
             media,
             orientation,
             sides,
