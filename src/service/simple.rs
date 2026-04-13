@@ -49,6 +49,7 @@ pub struct SimpleIppJobAttributes {
     pub sides: String,
     pub print_color_mode: String,
     pub printer_resolution: Option<Resolution>,
+    pub copies: Option<u32>,
 }
 
 impl SimpleIppJobAttributes {
@@ -111,6 +112,13 @@ impl SimpleIppJobAttributes {
         )
         .and_then(|attr| Resolution::try_from(attr).ok())
         .or(info.printer_resolution_default);
+
+        let copies = take_ipp_attribute(attributes, DelimiterTag::JobAttributes, "copies")
+            .and_then(|attr| match attr {
+                IppValue::Integer(n) => u32::try_from(n).ok(),
+                _ => None,
+            });
+
         Self {
             originating_user_name,
             document_name,
@@ -120,6 +128,7 @@ impl SimpleIppJobAttributes {
             sides,
             print_color_mode,
             printer_resolution,
+            copies,
         }
     }
 }
