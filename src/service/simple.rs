@@ -368,6 +368,19 @@ impl<T: SimpleIppServiceHandler> SimpleIppService<T> {
             description: IppAttribute::COLOR_SUPPORTED,
             IppValue::Boolean(self.info.color_supported)
         );
+        // Advertise multi-copy support so driver-based clients (Microsoft IPP
+        // Class Driver, CUPS, etc.) know to send the `copies` job-template
+        // attribute in Create-Job / Print-Job. Without this advertisement,
+        // Windows silently drops the user's dialog copies setting and sends
+        // copies=1 regardless. See DevBridge issue #37.
+        add_if_requested!(
+            template: "copies-default",
+            IppValue::Integer(1)
+        );
+        add_if_requested!(
+            template: "copies-supported",
+            IppValue::RangeOfInteger { min: 1, max: 999 }
+        );
         add_if_requested!(
             description: "which-jobs-supported",
             IppValue::Array(vec![
