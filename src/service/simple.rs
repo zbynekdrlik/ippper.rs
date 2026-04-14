@@ -556,6 +556,35 @@ impl<T: SimpleIppServiceHandler> SimpleIppService<T> {
                 )
             );
         }
+        // Advertise IPP Everywhere compliance so driver-based clients
+        // (Microsoft IPP Class Driver, Mopria stack) switch from legacy
+        // minimal mode to full job-template attribute forwarding. Without
+        // this, Windows sends empty JobAttributes regardless of what
+        // copies-supported / job-creation-attributes-supported say.
+        add_if_requested!(
+            description: "ipp-features-supported",
+            IppValue::Keyword("ipp-everywhere".to_string())
+        );
+        // printer-device-id: PWG-style MFG/MDL/CMD triplet. Required for
+        // Windows to recognise the printer as IPP Everywhere-capable and
+        // forward job-template attributes. CMD lists the payload formats
+        // we accept (currently PDF only for virtual printers).
+        add_if_requested!(
+            description: "printer-device-id",
+            IppValue::TextWithoutLanguage(format!(
+                "MFG:DevBridge;MDL:{};CMD:PDF;",
+                self.info.name
+            ))
+        );
+        // identify-actions: required by IPP Everywhere conformance (PWG 5100.14).
+        add_if_requested!(
+            description: "identify-actions-supported",
+            IppValue::Keyword("display".to_string())
+        );
+        add_if_requested!(
+            description: "identify-actions-default",
+            IppValue::Keyword("display".to_string())
+        );
         if !self.info.urf_supported.is_empty() {
             add_if_requested!(
                 description: "urf-supported",
