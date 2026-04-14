@@ -598,6 +598,7 @@ impl<T: SimpleIppServiceHandler> SimpleIppService<T> {
         );
         if is_requested!(description: "job-creation-attributes-supported") {
             let mut job_creation_attributes_supported = vec![
+                IppValue::Keyword("copies".to_string()),
                 IppValue::Keyword("job-name".to_string()),
                 IppValue::Keyword("media".to_string()),
                 IppValue::Keyword("orientation-requested".to_string()),
