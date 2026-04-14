@@ -58,6 +58,16 @@ impl SimpleIppJobAttributes {
         originating_user_name: String,
         attributes: &mut IppAttributes,
     ) -> Self {
+        // Diagnostic: dump the full IPP attribute set received on the
+        // Print-Job / Create-Job request so we can see exactly what
+        // attributes (and in which delimiter groups) the client actually
+        // sent. Used for debugging the Windows IPP Class Driver "copies
+        // lost" issue — see DevBridge issue #41.
+        eprintln!(
+            "[IPPPER-DIAG] received IPP attributes for job:\n{:#?}",
+            attributes
+        );
+
         // document-name and job-name are operation attributes, not job
         // attributes. Both are type `name(MAX)` per RFC 8011, so accept
         // NameWithoutLanguage and NameWithLanguage variants (same pattern as
